@@ -1,0 +1,1410 @@
+Ai revenue recovery
+Razorpay already has recovery agents; METIS becomes the counterfactual intelligence 
+layer that tells those agents when an intervention will actually create incremental revenue, 
+how much it is worth, and which action maximizes net recovery.
+
+Whats the problem?
+Payment fails, we dont know what action makes the customer pay again.
+
+Our model
+What would happen if we did nothing, and how much better would each possible intervention make things?
+
+Razor pay agents can:-detect failed revenue → choose a recovery action → execute it.
+What we are adding:-How do we avoid wasting recovery actions and spend our effort only where it will actually create incremental revenue?
+
+Here are the final functional and non-functional requirements for METIS.
+
+
+Functional Requirements
+FR1 — Payment & Customer Data Ingestion
+The system shall ingest payment, customer, merchant, and previous recovery-interaction data through APIs/webhooks or uploaded datasets.
+FR2 — At-Risk Payment Detection
+The system shall identify failed, overdue, or otherwise recoverable payments and calculate revenue at risk.
+FR3 — Customer Recovery Propensity
+The system shall estimate the probability that a customer will pay without any intervention.
+FR4 — Intervention Outcome Prediction
+The system shall estimate the expected recovery outcome for each permitted intervention:
+Retry
+Reminder
+Payment link
+Payment plan
+Negotiation
+Escalation
+FR5 — Counterfactual/Uplift Estimation
+The system shall estimate the incremental impact of each intervention compared with doing nothing.
+FR6 — Recovery Value Optimization
+The system shall calculate the expected incremental net revenue for each intervention after considering:
+Recovery amount
+Concession/discount
+Intervention cost
+Customer-contact/fatigue cost
+FR7 — Best-Action Selection
+The system shall select the intervention with the highest expected incremental net value while respecting merchant policies.
+FR8 — Policy & Guardrail Enforcement
+The system shall enforce configurable constraints such as:
+Maximum discount
+Maximum contacts
+Maximum negotiation attempts
+Minimum payable amount
+Allowed recovery channels
+Stopping conditions
+FR9 — AI Recovery Agent
+The system shall use an AI agent to communicate with customers, understand responses, negotiate within permitted limits, and execute the selected recovery workflow.
+FR10 — Razorpay Integration
+The system shall integrate with Razorpay APIs/MCP for supported actions such as payment links and payment-status verification.
+FR11 — Webhook Processing
+The system shall process payment-status webhooks, verify events, handle duplicate events, and update recovery outcomes.
+FR12 — Human Escalation
+The system shall escalate cases to a human when confidence is low, policies are exceeded, or automated recovery is inappropriate.
+FR13 — Audit Trail
+The system shall record:
+Model decision
+Predicted outcomes
+Selected intervention
+Policy checks
+Agent actions
+Customer responses
+Payment outcome
+FR14 — Experimentation & Measurement
+The system shall compare different recovery strategies using control/treatment groups and calculate:
+Recovery rate
+Incremental lift
+Incremental revenue
+Net recovery
+Intervention cost
+FR15 — Explainability
+The system shall explain why an intervention was selected, including the predicted counterfactual and expected incremental value.
+FR16 — Recovery Dashboard
+The system shall provide a dashboard showing:
+Revenue at risk
+Expected natural recovery
+Recommended intervention
+Expected incremental revenue
+Actual recovery
+Experiment results
+Agent/audit activity
+Non-Functional Requirements
+NFR1 — Reliability
+Payment and recovery workflows shall be fault-tolerant and safely recover from webhook duplication, API failures, agent failures, and interrupted workflows.
+NFR2 — Idempotency
+Financial actions shall be idempotent so duplicate events or retries cannot accidentally create duplicate payment actions.
+NFR3 — Security
+All sensitive customer/payment information shall be encrypted in transit and at rest, with secure authentication and authorization.
+NFR4 — Financial Safety
+The LLM shall never have unrestricted authority over financial actions. Every financial action must pass deterministic policy/guardrail validation.
+NFR5 — Performance
+Normal recovery decisions should be generated within ~1–2 seconds, excluding external payment-provider/network latency.
+NFR6 — Scalability
+The architecture shall support scaling from thousands to millions of payment/recovery events without redesigning the core decision pipeline.
+NFR7 — Availability
+The system should target 99.9% availability for the core decision and recovery services.
+NFR8 — Observability
+The system shall provide structured logs, metrics, traces, model-decision monitoring, and recovery-outcome monitoring.
+NFR9 — Model Quality
+Models shall be evaluated on held-out data using appropriate metrics such as:
+AUCPR
+calibration
+uplift/Qini-related metrics
+recovery lift
+false-positive/negative impact
+NFR10 — Explainability & Auditability
+Every automated financial recommendation shall be traceable to the inputs, model output, policy decision, and final action.
+NFR11 — Privacy
+The system shall minimize stored customer data and enforce appropriate retention/deletion policies.
+NFR12 — Maintainability
+The system shall use modular components so ML models, policies, agents, and payment integrations can be updated independently.
+NFR13 — Extensibility
+New interventions, merchants, payment methods, recovery channels, and ML models shall be addable without changing the entire system.
+NFR14 — Safety Under Uncertainty
+When model confidence is below a configurable threshold, the system shall prefer no action or human escalation rather than an aggressive recovery action.
+NFR15 — Regulatory/Business Compliance
+Recovery communications and actions shall respect merchant-defined policies, applicable payment rules, consent requirements, and communication limits.
+Features 
+1. Revenue-at-Risk Detection
+Automatically identify failed, overdue, or at-risk payments and calculate the total revenue currently at risk.
+2. Customer Recovery Profile
+Build a dynamic recovery profile using payment history, failure reasons, customer behavior, previous recovery attempts, payment preferences, and engagement history.
+3. Natural Payment Propensity
+Predict the probability that a customer will pay without any intervention.
+4. Multi-Intervention Prediction
+Predict the expected outcome of different recovery actions:
+Retry payment
+Payment reminder
+Payment link
+Alternate payment method
+Payment plan
+Negotiation
+Human escalation
+5. Counterfactual Recovery Engine
+Estimate what would happen with and without each intervention and calculate the incremental impact of every action.
+6. Incremental Revenue Optimizer
+Calculate the expected incremental net revenue of each intervention after accounting for recovery value, concessions, intervention cost, and customer-contact fatigue.
+7. Intelligent Action Selection
+Automatically select the highest-value recovery strategy for each customer.
+The system can also decide:
+Do nothing
+when intervention is unlikely to generate meaningful incremental revenue.
+8. AI Recovery Negotiator
+An AI agent communicates with customers, understands their situation, negotiates payment terms, and adapts the conversation based on customer responses.
+9. Dynamic Payment Plans
+Generate merchant-approved installment plans and payment schedules based on customer context and recovery probability.
+10. Merchant Policy & Guardrails
+Allow merchants to define:
+Maximum discount
+Maximum installment duration
+Maximum contact attempts
+Allowed communication channels
+Negotiation limits
+Minimum payable amount
+Escalation rules
+11. Financial Action Safety Layer
+Validate every AI-proposed financial action against deterministic policies before execution.
+12. Razorpay Payment Execution
+Execute supported recovery actions through Razorpay APIs/MCP, including payment-link creation and payment-status verification.
+13. Real-Time Webhook Processing
+Automatically update recovery workflows when payment events occur, with duplicate-event detection and idempotent processing.
+14. Intelligent Customer Intervention Budget
+Track how frequently a customer has been contacted and reduce or stop interventions when excessive communication is likely to hurt recovery or customer experience.
+15. Human-in-the-Loop Escalation
+Automatically route uncertain, high-value, policy-sensitive, or unsuccessful cases to human operators.
+16. Recovery Experimentation
+Run controlled experiments comparing:
+No intervention
+Rule-based recovery
+AI-selected recovery
+Individual recovery strategies
+17. Incremental Recovery Measurement
+Measure:
+Recovery rate
+Incremental recovery
+Net recovered revenue
+Intervention cost
+Concession cost
+Customer contact reduction
+Recovery lift
+18. AI Decision Explanation
+Explain why the system selected a particular intervention, including:
+Expected natural recovery
+Expected recovery with each action
+Expected incremental value
+Key decision factors
+Confidence
+19. Recovery Simulation
+Allow merchants to simulate different recovery policies before deploying them and estimate their expected financial impact.
+20. Real-Time Recovery Dashboard
+Provide a centralized view of:
+Revenue at risk
+Recovery opportunities
+Recommended actions
+Expected incremental revenue
+Active negotiations
+Successful recoveries
+Experiment results
+21. Complete Audit Trail
+Maintain a complete record of:
+Customer
+→ Prediction
+→ Counterfactual
+→ Recommended Action
+→ Policy Validation
+→ Agent Interaction
+→ Payment Action
+→ Payment Outcome
+22. Continuous Learning
+Use observed intervention outcomes to continuously improve propensity, uplift, recovery, and optimization models.
+23. Recovery Intelligence Analytics
+Identify broader patterns such as:
+Most effective recovery strategies
+Best communication channels
+Best intervention timing
+Customer segments with highest recovery lift
+Sources of recoverable revenue
+24. Confidence-Aware Decision Making
+Use confidence thresholds to determine whether the system should:
+Automate
+→ Recommend
+→ Escalate
+→ Do Nothing
+25. Recovery ROI Optimization
+Optimize the merchant's overall recovery strategy for:
+Maximum incremental net revenue, not maximum number of recovered payments.
+
+User stories
+Here are the final user stories for METIS, aligned with the finalized features and product flow.
+METIS — Final User Stories
+Merchant
+US1 — View Revenue at Risk As a merchant, I want to see my failed and overdue payments and the total revenue at risk so that I know how much revenue needs attention.
+US2 — View Customer Recovery Profile As a merchant, I want to view a customer's payment history, previous recovery attempts, and behavior so that I can understand their likelihood of recovery.
+US3 — See Recommended Recovery Action As a merchant, I want METIS to recommend the best recovery action for each payment so that I don't have to manually decide how to recover it.
+US4 — Understand the Recommendation As a merchant, I want to see why a particular recovery action was recommended so that I can trust the system's decision.
+US5 — Compare Recovery Strategies As a merchant, I want to compare the expected outcomes of different recovery actions so that I can understand their potential financial impact.
+US6 — Configure Recovery Policies As a merchant, I want to define limits for discounts, payment plans, contact frequency, negotiation attempts, and communication channels so that automated recovery stays within my business rules.
+US7 — Simulate Recovery Policies As a merchant, I want to simulate different recovery strategies before deploying them so that I can estimate their expected financial impact.
+US8 — Monitor Recovery Performance As a merchant, I want to monitor recovery rate, incremental revenue, intervention costs, and net recovery so that I can measure whether METIS is actually improving my revenue.
+
+AI Recovery System
+US9 — Identify At-Risk Payments As METIS, I want to identify failed or overdue payments that have a realistic chance of recovery so that recovery resources are focused on valuable opportunities.
+US10 — Predict Natural Recovery As METIS, I want to estimate whether a customer will pay without intervention so that unnecessary recovery actions can be avoided.
+US11 — Predict Intervention Outcomes As METIS, I want to estimate the expected outcome of every permitted recovery action so that I can compare possible strategies.
+US12 — Estimate Incremental Recovery As METIS, I want to estimate how much additional revenue each intervention is expected to generate compared with doing nothing so that decisions are based on incremental value.
+US13 — Optimize Recovery Value As METIS, I want to select the action with the highest expected incremental net revenue while considering costs, concessions, and customer fatigue so that recovery is economically optimized.
+US14 — Decide Not to Intervene As METIS, I want to choose no action when an intervention is unlikely to create meaningful incremental revenue so that merchants do not waste recovery resources.
+US15 — Execute Recovery Actions As METIS, I want to execute approved recovery actions through supported payment and communication channels so that recommendations can become actual outcomes.
+US16 — Negotiate with Customers As METIS, I want to communicate with customers and negotiate approved payment terms within merchant-defined limits so that difficult payments can still be recovered.
+US17 — Generate Payment Plans As METIS, I want to create suitable installment plans within merchant policies so that customers who cannot pay immediately have another path to repayment.
+US18 — Enforce Guardrails As METIS, I want to validate every financial action against merchant policies before execution so that the AI cannot perform unauthorized actions.
+US19 — Manage Customer Contact Frequency As METIS, I want to track previous interactions and customer fatigue so that customers are not repeatedly contacted unnecessarily.
+US20 — Escalate Uncertain Cases As METIS, I want to escalate low-confidence or policy-sensitive cases to a human so that risky decisions are not fully automated.
+
+Payment & Integration
+US21 — Execute Through Razorpay As METIS, I want to use Razorpay APIs/MCP to create payment links and verify payment status so that recovery can happen through the payment infrastructure.
+US22 — Process Payment Events As METIS, I want to receive and process Razorpay webhook events so that recovery workflows automatically update when payment status changes.
+US23 — Prevent Duplicate Actions As METIS, I want to detect duplicate webhook events and maintain idempotency so that the same financial action is never executed twice.
+
+Experimentation & Learning
+US24 — Run Recovery Experiments As a merchant, I want to compare control and treatment groups so that I can determine which recovery strategies actually work.
+US25 — Measure Incremental Lift As a merchant, I want to measure incremental recovery rather than just total recovery so that I know how much revenue METIS actually caused.
+US26 — Learn from Outcomes As METIS, I want to use actual recovery outcomes to improve my prediction and optimization models so that recovery decisions become more effective over time.
+US27 — Maintain an Audit Trail As a merchant, I want every prediction, decision, policy check, agent action, and payment outcome recorded so that recovery activity is fully traceable.
+
+Customer
+US28 — Receive Personalized Recovery Assistance As a customer, I want recovery communication to reflect my situation and payment history so that I receive relevant rather than generic reminders.
+US29 — Negotiate Payment Terms As a customer, I want to explain why I cannot pay immediately and receive eligible payment options so that I can choose a realistic way to complete the payment.
+US30 — Complete Payment Easily As a customer, I want to receive a secure payment link or payment-plan option so that I can complete the outstanding payment with minimal friction.
+
+Tech stack 
+1. Frontend
+Next.js + TypeScript
+Used for the merchant dashboard, recovery analytics, intervention simulator, customer profile, AI negotiation view, and audit trail.
+Supporting libraries:
+Tailwind CSS
+shadcn/ui
+Recharts
+
+2. Backend
+Python + FastAPI
+Handles:
+APIs
+business logic
+ML inference
+recovery orchestration
+policy validation
+Razorpay integration
+Supporting libraries:
+Pydantic
+SQLAlchemy
+Alembic
+
+3. Database
+PostgreSQL
+Stores:
+Customers
+Payments
+Failed/overdue payments
+Recovery attempts
+Interventions
+Predictions
+Policies
+Negotiations
+Experiments
+Outcomes
+Audit logs
+Redis
+Used for:
+caching
+short-lived agent state
+event queues
+workflow coordination
+
+4. Data & Event Processing
+Razorpay Webhooks
+Used to receive real-time payment events.
+Flow:
+Razorpay
+   ↓
+Webhook
+   ↓
+Signature verification
+   ↓
+Idempotency check
+   ↓
+METIS
+Razorpay APIs
+Used for:
+Payment Links
+Payment verification
+Orders
+Payment status
+Razorpay MCP
+Used as the modern tool interface between the AI agent and Razorpay operations where supported.
+
+5. ML Layer
+This is the core intelligence of METIS.
+Natural Recovery Propensity Model
+Predicts:
+P(customer pays | no intervention)
+Use:
+LightGBM
+Features include:
+payment amount
+failure reason
+days overdue
+historical payment behavior
+previous failed payments
+previous recovery attempts
+payment method
+customer segment
+engagement history
+
+Intervention Response Models
+Predict:
+P(payment | retry)
+P(payment | reminder)
+P(payment | payment link)
+P(payment | payment plan)
+P(payment | negotiation)
+Use:
+LightGBM / XGBoost
+
+6. Causal / Uplift ML
+This is our main technical differentiator.
+The system estimates:
+Incremental impact
+=
+P(pay | intervention)
+-
+P(pay | no intervention)
+Technologies:
+EconML
+For treatment-effect/uplift estimation.
+CausalML
+For uplift modeling and treatment optimization.
+DoWhy
+For causal assumptions, validation and refutation tests.
+We can compare:
+Control
+vs
+Retry
+vs
+Reminder
+vs
+Payment Plan
+vs
+Negotiation
+
+7. Recovery Value Engine
+Convert model predictions into money.
+Expected Incremental Revenue
+=
+Incremental Recovery Probability
+×
+Recoverable Amount
+Then:
+Expected Net Value
+=
+Incremental Revenue
+-
+Intervention Cost
+-
+Concession Cost
+-
+Customer Fatigue Cost
+This produces the metric that drives the decision:
+Expected Incremental Net Recovery
+
+8. Decision & Optimization Engine
+The optimizer chooses the best recovery action.
+Technologies:
+Google OR-Tools
+Used when multiple constraints need to be optimized simultaneously.
+Example:
+Retry        → ₹1,200
+Reminder     → ₹400
+Payment Plan → ₹4,800
+Negotiation  → ₹5,600
+
+Best action → Negotiation
+It can also return:
+DO NOTHING
+when intervention isn't economically worthwhile.
+
+9. Policy & Guardrail Engine
+Python + Pydantic + deterministic rules
+Example:
+Maximum discount       = 5%
+Maximum contacts       = 3
+Maximum negotiations   = 2
+Minimum payment        = ₹500
+Maximum plan duration  = 60 days
+Allowed channels       = Email + WhatsApp + Voice
+The LLM cannot bypass this layer.
+
+10. Agentic AI Layer
+Open-Source LLM
+Primary model: Qwen
+Use an appropriate Qwen 3.x open-weight model depending on available hardware.
+For local development, use a smaller model if necessary.
+For stronger demonstrations, use the largest model your available GPU can reasonably handle.
+
+Agent Orchestration
+Keep the orchestration simple and controlled with Python rather than depending on an expensive proprietary agent platform.
+The agent follows:
+User/customer message
+        ↓
+Qwen
+        ↓
+Tool selection
+        ↓
+Policy validation
+        ↓
+Tool execution
+        ↓
+Result
+        ↓
+Qwen
+
+11. Agent Tools
+The agent can access typed tools such as:
+get_customer_context()
+get_payment_context()
+get_recovery_options()
+get_merchant_policy()
+calculate_recovery_value()
+create_payment_plan()
+create_payment_link()
+check_payment_status()
+record_customer_response()
+escalate_to_human()
+Financial tools must always pass through the policy engine.
+
+12. AI Negotiator
+Qwen handles:
+understanding customer responses
+identifying payment constraints
+conversational negotiation
+proposing approved options
+adapting the conversation
+explaining payment plans
+Example:
+Customer:
+"I can't pay ₹50,000 today."
+
+Agent:
+"Would ₹25,000 today and ₹25,000
+in 30 days work for you?"
+The agent cannot invent a discount or payment condition outside the merchant policy.
+
+13. Customer Intervention-Fatigue Model
+Predict whether additional contact is likely to be counterproductive.
+Inputs:
+number of previous contacts
+time between contacts
+channel
+previous responses
+failed negotiations
+engagement
+Output:
+LOW
+MEDIUM
+HIGH
+This becomes part of the recovery-value calculation.
+
+14. Recovery Simulator
+Merchant can test:
+Current policy
+vs
+5% concession
+vs
+Payment plans
+vs
+Voice recovery
+vs
+Negotiation
+The simulator predicts:
+expected recovery
+incremental recovery
+cost
+concession leakage
+contact volume
+net recovery
+
+15. Experimentation
+Use controlled experiments:
+Control
+No intervention
+
+Treatment A
+Retry
+
+Treatment B
+Reminder
+
+Treatment C
+Payment Plan
+
+Treatment D
+Negotiation
+Measure:
+Recovery rate
+Incremental lift
+Incremental revenue
+Net recovery
+Intervention cost
+Concession cost
+Contact reduction
+
+16. Experiment / Model Tracking
+MLflow
+Use for:
+model versions
+experiments
+metrics
+model registry
+evaluation
+agent evaluation/tracing where useful
+
+17. Explainability
+ML models
+Use:
+SHAP
+to explain important prediction features.
+Example:
+Why was Payment Plan selected?
+
++ Previous payment-plan success
++ High payment amount
++ Recent customer engagement
++ Customer has not ignored previous messages
+
+Expected incremental recovery:
+₹8,420
+Agent
+Use structured reasoning summaries rather than exposing hidden chain-of-thought.
+
+18. Observability
+OpenTelemetry
+Track:
+API latency
+model latency
+agent latency
+tool calls
+webhook processing
+failures
+recovery decisions
+Prometheus
+Collect system metrics.
+Grafana
+Display infrastructure and runtime metrics.
+
+19. Security
+Use:
+HTTPS
+JWT/session authentication
+encrypted secrets
+environment variables
+role-based access
+database access controls
+Never expose:
+API keys
+payment secrets
+unnecessary customer PII
+
+20. Reliability
+Implement:
+Idempotency
+Prevent duplicate financial actions.
+Retry policies
+For temporary API failures.
+Dead-letter handling
+For events that repeatedly fail.
+Circuit breakers
+For unavailable external services.
+Human fallback
+For low-confidence or policy-sensitive cases.
+
+21. Deployment
+Development
+Run locally with:
+Docker Compose
+Next.js
+FastAPI
+PostgreSQL
+Redis
+MLflow
+Free/low-cost deployment
+Frontend:
+Vercel
+Backend:
+Render / similar free-tier service
+Database:
+Supabase free PostgreSQL or local PostgreSQL.
+For the hackathon, local + one free cloud deployment is enough.
+
+22. Data
+Use a combination of:
+Real public datasets
+For behavioral/payment modeling where applicable.
+Razorpay Test Mode
+For actual:
+payment objects
+Payment Links
+webhooks
+payment status changes
+Controlled experimental data
+For intervention experiments and counterfactual/uplift modeling.
+
+23. Testing
+Backend
+Pytest
+API
+Postman / pytest
+Frontend
+Playwright
+ML
+Test:
+data leakage
+calibration
+uplift performance
+threshold performance
+out-of-distribution behavior
+Agent
+Test:
+invalid tool calls
+hallucinated discounts
+policy violations
+duplicate actions
+failed payments
+customer refusal
+agent escalation
+
+    
+
+
+
+Architecture 
+                         ┌──────────────────────────┐
+                         │        RAZORPAY          │
+                         │ APIs / MCP / Webhooks    │
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │     API / Event Gateway  │
+                         │ Auth • Verify • Dedup    │
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │     Context Engine       │
+                         │ Customer + Payment Data  │
+                         └────────────┬─────────────┘
+                                      │
+                  ┌───────────────────┼───────────────────┐
+                  ▼                   ▼                   ▼
+          ┌───────────────┐   ┌────────────────┐   ┌───────────────┐
+          │ Propensity    │   │ Intervention   │   │ Fatigue Model │
+          │ Model         │   │ Models         │   │               │
+          │               │   │ Retry          │   │ Contact cost  │
+          │ P(pay|none)   │   │ Reminder       │   │               │
+          └───────┬───────┘   │ Plan           │   └───────┬───────┘
+                  │            │ Negotiation    │           │
+                  │            └───────┬────────┘           │
+                  └────────────────────┼────────────────────┘
+                                       ▼
+                         ┌──────────────────────────┐
+                         │  Counterfactual / Uplift │
+                         │         Engine           │
+                         │                          │
+                         │ P(pay|action) -         │
+                         │ P(pay|no action)        │
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │    Recovery Optimizer    │
+                         │                          │
+                         │ Incremental ₹             │
+                         │ - intervention cost      │
+                         │ - concession cost        │
+                         │ - fatigue cost            │
+                         │                          │
+                         │ → Best Action / No Action│
+                         └────────────┬─────────────┘
+                                      │
+                                      ▼
+                         ┌──────────────────────────┐
+                         │    Policy & Guardrails   │
+                         │                          │
+                         │ Discount limits          │
+                         │ Contact limits            │
+                         │ Negotiation limits        │
+                         │ Payment-plan limits       │
+                         └────────────┬─────────────┘
+                                      │
+                         ┌────────────┴─────────────┐
+                         ▼                          ▼
+              ┌─────────────────────┐     ┌─────────────────────┐
+              │   AI Recovery Agent │     │   Human Escalation  │
+              │       Qwen           │     │                     │
+              │                     │     │ Low confidence      │
+              │ Negotiation         │     │ High-value cases    │
+              │ Customer dialogue   │     │ Policy exceptions   │
+              └──────────┬──────────┘     └─────────────────────┘
+                         │
+                         ▼
+              ┌──────────────────────────┐
+              │    Razorpay MCP / APIs   │
+              │ Payment Link / Payment   │
+              │ Verification / Actions   │
+              └────────────┬─────────────┘
+                           │
+                           ▼
+                        PAYMENT
+                           │
+                           ▼
+              ┌──────────────────────────┐
+              │     Webhook Processor    │
+              │ Verify • Deduplicate     │
+              └────────────┬─────────────┘
+                           │
+                           ▼
+              ┌──────────────────────────┐
+              │      Outcome Store       │
+              │ Actual payment outcome   │
+              │ Intervention result      │
+              └────────────┬─────────────┘
+                           │
+                           ▼
+              ┌──────────────────────────┐
+              │    Experiment Engine     │
+              │ Control vs Treatments    │
+              │ Incremental Lift         │
+              └────────────┬─────────────┘
+                           │
+                           ▼
+              ┌──────────────────────────┐
+              │          MLflow          │
+              │ Models • Experiments     │
+              │ Evaluation • Registry    │
+              └────────────┬─────────────┘
+                           │
+                           └──────────► Model Improvement
+Frontend:
+Next.js + TypeScript
+        │
+        ▼
+FastAPI Backend
+        │
+ ┌──────┼────────┐
+ ▼      ▼        ▼
+Postgres Redis   ML Services
+
+Payment fails
+→ Understand customer
+→ Predict natural recovery
+→ Predict every intervention
+→ Estimate incremental recovery
+→ Optimize ₹ value
+→ Apply guardrails
+→ AI executes
+→ Razorpay processes payment
+→ Webhook confirms outcome
+→ Measure incremental lift
+→ Improve models
+Database design
+METIS — Final Database Design
+1. merchants
+Stores merchant-level information and recovery configuration.
+merchant_id (PK)
+name
+currency
+timezone
+status
+created_at
+updated_at
+
+2. customers
+Stores customer profiles.
+customer_id (PK)
+merchant_id (FK)
+external_customer_id
+name
+email
+phone
+segment
+created_at
+updated_at
+
+3. payments
+Stores payment information.
+payment_id (PK)
+merchant_id (FK)
+customer_id (FK)
+razorpay_payment_id
+order_id
+amount
+currency
+payment_method
+status
+failure_reason
+failed_at
+due_at
+created_at
+updated_at
+
+4. recovery_cases
+Represents a payment currently being considered for recovery.
+case_id (PK)
+payment_id (FK)
+customer_id (FK)
+merchant_id (FK)
+status
+revenue_at_risk
+priority_score
+created_at
+updated_at
+closed_at
+Possible status:
+OPEN
+IN_PROGRESS
+RECOVERED
+ESCALATED
+CLOSED
+
+5. interventions
+Stores every possible or executed recovery action.
+intervention_id (PK)
+case_id (FK)
+type
+status
+channel
+started_at
+completed_at
+cost
+concession_amount
+actual_recovered_amount
+Types:
+RETRY
+REMINDER
+PAYMENT_LINK
+PAYMENT_PLAN
+NEGOTIATION
+ESCALATION
+
+6. intervention_predictions
+Stores model predictions for each possible intervention.
+prediction_id (PK)
+case_id (FK)
+intervention_type
+probability_without_intervention
+probability_with_intervention
+uplift
+expected_recovery
+intervention_cost
+concession_cost
+fatigue_cost
+expected_net_value
+model_version
+created_at
+This is one of the most important tables.
+
+7. recovery_decisions
+Stores the final decision made by the optimization engine.
+decision_id (PK)
+case_id (FK)
+selected_intervention
+expected_net_value
+confidence
+reason
+decision_source
+created_at
+Example:
+selected_intervention = PAYMENT_PLAN
+expected_net_value = 8420
+confidence = 0.91
+
+8. merchant_policies
+Stores merchant-defined recovery constraints.
+policy_id (PK)
+merchant_id (FK)
+max_discount_percent
+max_contacts
+max_negotiation_attempts
+min_payment_amount
+max_installment_period
+allowed_channels
+stopping_rules
+created_at
+updated_at
+
+9. customer_interactions
+Stores every customer communication.
+interaction_id (PK)
+case_id (FK)
+customer_id (FK)
+channel
+direction
+message
+interaction_type
+response
+sent_at
+Channels:
+EMAIL
+WHATSAPP
+SMS
+VOICE
+
+10. payment_plans
+Stores negotiated installment plans.
+plan_id (PK)
+case_id (FK)
+customer_id (FK)
+total_amount
+installment_count
+installment_amount
+frequency
+start_date
+end_date
+status
+created_at
+
+11. experiments
+Stores recovery experiments.
+experiment_id (PK)
+merchant_id (FK)
+name
+description
+status
+start_at
+end_at
+created_at
+
+12. experiment_assignments
+Maps customers/cases to experiment groups.
+assignment_id (PK)
+experiment_id (FK)
+case_id (FK)
+group_name
+intervention_type
+assigned_at
+Example:
+CONTROL
+RETRY
+REMINDER
+PAYMENT_PLAN
+NEGOTIATION
+
+13. recovery_outcomes
+Stores actual results.
+outcome_id (PK)
+case_id (FK)
+intervention_id (FK)
+amount_recovered
+recovery_status
+recovery_time
+intervention_cost
+concession_cost
+net_recovered_amount
+created_at
+This is what we compare against our predictions.
+
+14. webhook_events
+Stores Razorpay webhook events.
+event_id (PK)
+razorpay_event_id
+event_type
+payload
+signature
+processed
+received_at
+processed_at
+razorpay_event_id should have a unique constraint for idempotency.
+
+15. agent_runs
+Tracks every AI-agent execution.
+run_id (PK)
+case_id (FK)
+model_name
+model_version
+status
+input_summary
+output_summary
+started_at
+completed_at
+
+16. agent_tool_calls
+Stores tools called by the AI agent.
+tool_call_id (PK)
+run_id (FK)
+tool_name
+arguments
+result
+policy_status
+executed_at
+This gives us a complete agent audit trail.
+
+17. audit_logs
+Immutable record of important system actions.
+audit_id (PK)
+merchant_id (FK)
+case_id (FK)
+actor_type
+actor_id
+action
+before_state
+after_state
+timestamp
+Actors:
+SYSTEM
+MODEL
+AGENT
+MERCHANT
+HUMAN_OPERATOR
+
+18. model_versions
+Tracks deployed ML models.
+model_version_id (PK)
+model_name
+version
+model_type
+training_dataset
+metrics
+deployment_status
+created_at
+
+Relationships
+MERCHANT
+   │
+   ├── CUSTOMERS
+   │      │
+   │      └── PAYMENTS
+   │              │
+   │              └── RECOVERY_CASE
+   │                       │
+   │          ┌────────────┼────────────┐
+   │          ▼            ▼            ▼
+   │   INTERVENTIONS   PREDICTIONS   DECISIONS
+   │          │
+   │          ▼
+   │   RECOVERY_OUTCOMES
+   │
+   ├── POLICIES
+   └── EXPERIMENTS
+            │
+            ▼
+    EXPERIMENT_ASSIGNMENTS
+
+RECOVERY_CASE
+      │
+      ├── CUSTOMER_INTERACTIONS
+      ├── PAYMENT_PLANS
+      ├── AGENT_RUNS
+      │      └── AGENT_TOOL_CALLS
+      │
+      └── AUDIT_LOGS
+
+RAZORPAY
+   │
+   └── WEBHOOK_EVENTS
+Core database flow
+Payment
+   ↓
+Recovery Case
+   ↓
+Intervention Predictions
+   ↓
+Recovery Decision
+   ↓
+Policy Validation
+   ↓
+Agent / Intervention
+   ↓
+Razorpay Webhook
+   ↓
+Recovery Outcome
+   ↓
+Experiment Results
+   ↓
+Model Improvement
+Database technology
+Primary DB: PostgreSQL
+ORM: SQLAlchemy
+Migrations: Alembic
+Cache / event state: Redis
+Optional later: pgvector only if we need semantic retrieval for merchant policies or agent context.
+For the hackathon, PostgreSQL + Redis is enough.
+
+Api design
+Create / Update Customer
+POST /api/v1/customers
+Creates or updates a customer profile.
+Get Customer
+GET /api/v1/customers/{customer_id}
+Returns customer profile and recovery history.
+Get Payment
+GET /api/v1/payments/{payment_id}
+Returns payment details and current status.
+Get At-Risk Payments
+GET /api/v1/recovery/opportunities
+Returns failed/overdue payments identified as recovery opportunities.
+
+2. Recovery APIs
+Create Recovery Case
+POST /api/v1/recovery/cases
+Creates a recovery case for an at-risk payment.
+Get Recovery Case
+GET /api/v1/recovery/cases/{case_id}
+Returns:
+Payment details
+Revenue at risk
+Customer context
+Predictions
+Recommended action
+Recovery status
+Get Recovery Predictions
+GET /api/v1/recovery/cases/{case_id}/predictions
+Returns predicted outcomes for all available interventions.
+Example:
+{
+  "retry": {
+    "probability": 0.23,
+    "expected_incremental_revenue": 1200
+  },
+  "payment_plan": {
+    "probability": 0.67,
+    "expected_incremental_revenue": 4800
+  },
+  "negotiation": {
+    "probability": 0.74,
+    "expected_incremental_revenue": 5600
+  }
+}
+Get Recommended Action
+GET /api/v1/recovery/cases/{case_id}/recommendation
+Returns the optimal intervention, expected net value, confidence, and explanation.
+Recalculate Recovery Strategy
+POST /api/v1/recovery/cases/{case_id}/optimize
+Re-runs the counterfactual and optimization pipeline.
+
+3. Simulation APIs
+Simulate Recovery Strategy
+POST /api/v1/recovery/simulate
+Simulates different interventions without executing them.
+Simulate Merchant Policy
+POST /api/v1/policies/simulate
+Shows expected financial impact of a proposed recovery policy.
+Example:
+Current policy       → ₹12.8L
+5% concession        → ₹15.1L
+Payment plans        → ₹16.4L
+Negotiation          → ₹17.0L
+
+4. Agent APIs
+Start Recovery Agent
+POST /api/v1/agent/runs
+Starts an AI recovery workflow.
+Send Customer Message
+POST /api/v1/agent/runs/{run_id}/messages
+Sends a customer message to the agent.
+Get Agent Run
+GET /api/v1/agent/runs/{run_id}
+Returns agent status and current recovery state.
+Get Agent Tool Calls
+GET /api/v1/agent/runs/{run_id}/tools
+Returns tools called by the agent and their execution status.
+
+5. Negotiation APIs
+Start Negotiation
+POST /api/v1/recovery/cases/{case_id}/negotiate
+Starts a bounded negotiation.
+Get Negotiation
+GET /api/v1/recovery/cases/{case_id}/negotiation
+Returns:
+Conversation state
+Approved options
+Customer responses
+Current offer
+Negotiation attempts
+Create Payment Plan
+POST /api/v1/recovery/cases/{case_id}/payment-plan
+Creates a merchant-approved installment plan.
+
+6. Policy APIs
+Get Merchant Policy
+GET /api/v1/merchants/{merchant_id}/policy
+Returns recovery constraints.
+Update Merchant Policy
+PUT /api/v1/merchants/{merchant_id}/policy
+Updates:
+Discount limits
+Contact limits
+Negotiation limits
+Payment-plan constraints
+Allowed channels
+Stopping rules
+Validate Action
+POST /api/v1/policies/validate
+Checks whether a proposed AI action is allowed.
+{
+  "action": "DISCOUNT",
+  "discount_percent": 8
+}
+Response:
+{
+  "allowed": false,
+  "reason": "Merchant maximum discount is 5%"
+}
+
+7. Razorpay Integration APIs
+Create Razorpay Payment Link
+POST /api/v1/razorpay/payment-links
+Creates a payment link through Razorpay.
+Verify Payment
+GET /api/v1/razorpay/payments/{payment_id}/verify
+Verifies the current payment status.
+Razorpay Webhook
+POST /api/v1/webhooks/razorpay
+Receives Razorpay payment events.
+Flow:
+Webhook
+→ Signature validation
+→ Event ID deduplication
+→ Process event
+→ Update payment
+→ Update recovery case
+→ Record outcome
+
+8. Experiment APIs
+Create Experiment
+POST /api/v1/experiments
+Creates a recovery experiment.
+Assign Customer
+POST /api/v1/experiments/{experiment_id}/assign
+Assigns a case/customer to a control or treatment group.
+Get Experiment
+GET /api/v1/experiments/{experiment_id}
+Returns experiment configuration and status.
+Get Experiment Results
+GET /api/v1/experiments/{experiment_id}/results
+Returns:
+Recovery rate
+Incremental lift
+Incremental revenue
+Net recovery
+Intervention cost
+Concession cost
+
+9. Dashboard APIs
+Recovery Overview
+GET /api/v1/dashboard/recovery
+Returns:
+Revenue at risk
+Expected natural recovery
+Expected incremental recovery
+Actual recovered revenue
+Active recovery cases
+Recovery Analytics
+GET /api/v1/dashboard/analytics
+Returns recovery performance by:
+Intervention
+Customer segment
+Payment method
+Failure reason
+Time period
+Live Agent Activity
+GET /api/v1/dashboard/agent-activity
+Returns active recovery conversations and agent actions.
+
+10. Audit APIs
+Get Recovery Audit
+GET /api/v1/audit/recovery/{case_id}
+Returns the complete decision trail:
+Prediction
+→ Counterfactual
+→ Recommendation
+→ Policy validation
+→ Agent action
+→ Razorpay action
+→ Payment outcome
+Get Agent Audit
+GET /api/v1/audit/agent/{run_id}
+Returns all agent decisions and tool executions.
+
+11. Internal ML APIs
+These remain internal services rather than public APIs.
+Propensity Prediction
+POST /internal/ml/propensity
+Intervention Prediction
+POST /internal/ml/intervention
+Uplift Prediction
+POST /internal/ml/uplift
+Recovery Value
+POST /internal/ml/value
+Model Health
+GET /internal/ml/health
+
+Final API Flow
+                    Razorpay
+                       │
+                 Webhooks / API
+                       │
+                       ▼
+              /api/v1/recovery
+                       │
+                       ▼
+                Context Engine
+                       │
+          ┌────────────┼────────────┐
+          ▼            ▼            ▼
+      Propensity   Intervention   Fatigue
+          │            │            │
+          └────────────┼────────────┘
+                       ▼
+                 /optimize
+                       │
+                       ▼
+              Counterfactual/Uplift
+                       │
+                       ▼
+                Value Optimizer
+                       │
+                       ▼
+                 Policy Validate
+                       │
+              ┌────────┴────────┐
+              ▼                 ▼
+        AI Negotiator       Human Review
+              │
+              ▼
+       Razorpay API / MCP
+              │
+              ▼
+           Payment
+              │
+           Webhook
+              │
+              ▼
+        Recovery Outcome
+              │
+              ▼
+        Experiment Engine
+API design principles
+REST for application APIs
+Webhooks for asynchronous Razorpay events
+Typed tool calls for the AI agent
+Idempotency keys for financial operations
+JWT/OAuth-style authentication for application access
+Pydantic schemas for every request/response
+Versioned APIs: /api/v1/...
+Strict separation: LLM → policy engine → financial action
+This is the API layer I'd use for the final METIS implementation.
+
+Planning
+Okay so project should be well maintained.
+Do not write extra code which is completely unnecessary.
+If functions are written they should be precise and error handling should also be done.
+Remember this is a production level software which needs to be precise and accurate
+Rate limit where ever necessary.
+Maintain a separate md file and it should store till where the progress has been done so that if I switch between other agents, they
+Should be able to track and know till where the changes are done.
+
