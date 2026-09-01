@@ -1,0 +1,78 @@
+{
+  "dataset_rows": 60000,
+  "train_rows": 48000,
+  "test_rows": 12000,
+  "propensity": {
+    "auc_pr": 0.2365349198614728,
+    "roc_auc": 0.661289654846112,
+    "brier": 0.11444691175098458,
+    "log_loss": 0.3843505474312392,
+    "accuracy_at_0_5": 0.8635983263598327
+  },
+  "interventions": {
+    "RETRY": {
+      "n_train": 7733,
+      "n_test": 1933,
+      "auc_pr": 0.2984001332242233,
+      "roc_auc": 0.6169851957437764,
+      "brier": 0.16821463348235383,
+      "log_loss": 0.5161480056314874,
+      "accuracy_at_0_5": 0.7754785307811691
+    },
+    "REMINDER": {
+      "n_train": 7698,
+      "n_test": 1925,
+      "auc_pr": 0.3665078787706102,
+      "roc_auc": 0.6766877589453861,
+      "brier": 0.16832804790819295,
+      "log_loss": 0.5097076442539916,
+      "accuracy_at_0_5": 0.7636363636363637
+    },
+    "PAYMENT_LINK": {
+      "n_train": 7660,
+      "n_test": 1915,
+      "auc_pr": 0.3765344976784406,
+      "roc_auc": 0.5755021441899828,
+      "brier": 0.210390312728334,
+      "log_loss": 0.6130844856812788,
+      "accuracy_at_0_5": 0.6919060052219321
+    },
+    "PAYMENT_PLAN": {
+      "n_train": 7625,
+      "n_test": 1906,
+      "auc_pr": 0.3820712678710275,
+      "roc_auc": 0.6288014631334115,
+      "brier": 0.20177106091196514,
+      "log_loss": 0.5910031891173191,
+      "accuracy_at_0_5": 0.6977964323189927
+    },
+    "NEGOTIATION": {
+      "n_train": 7725,
+      "n_test": 1931,
+      "auc_pr": 0.41439406722360983,
+      "roc_auc": 0.6221959107083148,
+      "brier": 0.20917315328373376,
+      "log_loss": 0.607519665765464,
+      "accuracy_at_0_5": 0.677369238736406
+    }
+  },
+  "uplift": {
+    "mean_absolute_uplift_error": 0.08195424094851751,
+    "mean_selected_true_uplift": 0.1892635654880707,
+    "mean_oracle_uplift": 0.23081805577594308,
+    "policy_capture_rate": 0.8043862069200404,
+    "best_action_accuracy": 0.4106666666666667
+  },
+  "fatigue": {
+    "balanced_accuracy": 0.7637691963465135,
+    "accuracy": 0.8175,
+    "n_test": 12000,
+    "classes": [
+      "HIGH",
+      "LOW",
+      "MEDIUM"
+    ],
+    "mean_max_probability": 0.8117777269350485
+  },
+  "data_note": "Semi-synthetic controlled simulator for buildathon validation; not production data."
+}
