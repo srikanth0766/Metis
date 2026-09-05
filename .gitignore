@@ -56,3 +56,11 @@ metis_final_ml_architecture/
 # Logs & scratch
 *.log
 scratch/
+
+# Internal docs & scratch specs
+agent.md
+frontend.md
+progress.md
+progress_tracker.md
+model_metrics.json
+
